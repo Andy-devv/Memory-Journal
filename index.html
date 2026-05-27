@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My Memory Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+    </style>
+</head>
+<body>
+ 
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="app-logo">📖</div>
+    <h1 class="login-title">My Memory Journal</h1>
+    <p class="login-subtitle">A safe place to save your memories</p>
+ 
+    <div class="login-mode-tabs">
+      <button class="mode-tab active" onclick="setLoginMode('enter')" id="tab-enter">Sign In</button>
+      <button class="mode-tab" onclick="setLoginMode('create')" id="tab-create">New Account</button>
+    </div>
+ 
+    <div id="enter-section">
+      <div class="word-instructions">
+        🔑 Enter your three special words in order to open your journal.
+      </div>
+      <div class="word-inputs">
+        <div class="word-row"><div class="word-num">1</div><input class="word-input" type="text" id="signin-w1" placeholder="First word" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div class="word-row"><div class="word-num">2</div><input class="word-input" type="text" id="signin-w2" placeholder="Second word" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div class="word-row"><div class="word-num">3</div><input class="word-input" type="text" id="signin-w3" placeholder="Third word" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      </div>
+      <button class="btn-primary" onclick="doSignIn()">Open My Journal →</button>
+    </div>
+ 
+    <div id="create-section" style="display:none">
+      <div class="word-instructions">
+        ✨ Choose three words you will remember — like <strong>flower river sun</strong>.<br><br>
+        These three words, in this order, will open your journal every time.
+      </div>
+      <div class="word-inputs">
+        <div class="word-row"><div class="word-num">1</div><input class="word-input" type="text" id="create-w1" placeholder="First word" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div class="word-row"><div class="word-num">2</div><input class="word-input" type="text" id="create-w2" placeholder="Second word" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div class="word-row"><div class="word-num">3</div><input class="word-input" type="text" id="create-w3" placeholder="Third word" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      </div>
+      <button class="btn-primary" onclick="doCreateAccount()">Create My Journal →</button>
+    </div>
+ 
+    <div id="login-msg" class="login-msg"></div>
+  </div>
+</div>
+ 
+<!-- ══════════ APP SCREEN ══════════ -->
+<div id="screen-app" class="screen">
+  <header class="app-header">
+    <div class="header-brand">
+      <div class="header-icon">📖</div>
+      <div>
+        <div class="header-title">My Journal</div>
+        <div class="header-date" id="header-date"></div>
+      </div>
+    </div>
+    <button class="btn-icon" onclick="doSignOut()" title="Sign out">🚪</button>
+  </header>
+ 
+  <div class="app-content">
+ 
+    <!-- ── NEW ENTRY VIEW ── -->
+    <div id="view-new" class="view active">
+      <div class="record-card">
+        <div class="section-label">📝 New Memory</div>
+ 
+        <div style="margin-bottom:14px;">
+          <label style="display:block; font-size:0.85rem; font-weight:800; color:var(--accent); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">📅 Date of this memory</label>
+          <input
+            type="date"
+            id="entry-date"
+            style="width:100%; background:var(--bg2); border:2px solid var(--border); border-radius:var(--radius-sm); padding:14px 16px; font-family:'Nunito',sans-serif; font-size:1.05rem; font-weight:600; color:var(--text); outline:none; transition:border-color 0.2s; color-scheme:dark;"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'"
+          >
+        </div>
+ 
+        <input class="entry-title-input" type="text" id="entry-title" placeholder="Give this memory a title (e.g. Lunch with Sarah)">
+ 
+        <div class="speech-unsupported" id="speech-unsupported">
+          ℹ️ Voice recording isn't available on this browser. You can type your memory below.
+        </div>
+ 
+        <button class="btn-record" id="btn-record" onclick="toggleRecording()">
+          <div class="record-dot"></div>
+          <span id="record-label">🎙️ Tap to Record Your Memory</span>
+        </button>
+ 
+        <div class="voice-indicator" id="voice-indicator">
+          <div class="voice-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          Listening… speak now
+        </div>
+ 
+        <div
+          class="transcript-area"
+          id="transcript"
+          contenteditable="true"
+          data-placeholder="Your words will appear here as you speak, or you can type directly…"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Journal entry text"
+        ></div>
+ 
+        <div class="photo-upload-area" id="photo-upload-area">
+          <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)">
+          <div class="photo-upload-icon">📷</div>
+          <div class="photo-upload-text">Tap to add photos to this memory</div>
+        </div>
+ 
+        <div class="photo-previews" id="photo-previews"></div>
+ 
+        <button class="btn-save" onclick="saveEntry()">
+          💾 Save This Memory
+        </button>
+      </div>
+    </div>
+ 
+    <!-- ── CALENDAR + ENTRIES VIEW ── -->
+    <div id="view-journal" class="view">
+      <div class="calendar-card">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="changeMonth(-1)">‹</button>
+          <div class="cal-month" id="cal-month-label"></div>
+          <button class="cal-nav" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+ 
+      <div class="entries-section">
+        <div class="entries-header">
+          <span id="entries-section-label">📚 All Memories</span>
+          <span id="entries-count" style="color:var(--text-muted); font-size:0.8rem; font-weight:600;"></span>
+        </div>
+        <div id="filter-clear-wrap" style="display:none; margin-bottom:14px;">
+          <button onclick="clearDateFilter()" style="background:var(--bg3); border:1px solid var(--border); color:var(--text-soft); padding:8px 16px; border-radius:20px; font-family:'Nunito',sans-serif; font-size:0.9rem; font-weight:700; cursor:pointer;">
+            ← Show all memories
+          </button>
+        </div>
+        <div id="entries-list"></div>
+      </div>
+    </div>
+ 
+  </div><!-- end app-content -->
+ 
+  <!-- bottom nav wrap -->
+  <div class="bottom-nav-wrap">
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="nav-new" onclick="showView('new')">
+        <span class="nav-icon">✏️</span>
+        New Memory
+      </button>
+      <button class="nav-btn" id="nav-journal" onclick="showView('journal')">
+        <span class="nav-icon">📅</span>
+        My Journal
+      </button>
+    </nav>
+  </div>
+</div>
+ 
+<!-- ══════════ ENTRY DETAIL MODAL ══════════ -->
+<div class="modal-overlay" id="entry-modal" onclick="closeModal(event)">
+  <div class="modal-box" id="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-date" id="modal-date"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-photos" id="modal-photos"></div>
+  </div>
+</div>
+ 
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="Photo">
+</div>
+ 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+ 
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let currentUser = null;
+let entries = [];
+let pendingPhotos = [];
+let recognition = null;
+let isRecording = false;
+let calendarDate = new Date();
+let selectedCalDate = null;
+let _pendingNewDate = null; // date to pre-fill when switching to new-entry view
+ 
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  updateHeaderDate();
+  checkAutoLogin();
+  checkSpeechSupport();
+  renderCalendar();
+  setDatePickerToToday();
+});
+ 
+function checkAutoLogin() {
+  const saved = localStorage.getItem('mj_session');
+  if (saved) {
+    currentUser = saved;
+    loadEntries();
+    showApp();
+  }
+}
+ 
+function setDatePickerToToday() {
+  const el = document.getElementById('entry-date');
+  if (!el) return;
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  el.value = `${y}-${m}-${d}`;
+}
+ 
+function checkSpeechSupport() {
+  const supported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
+  if (!supported) {
+    document.getElementById('speech-unsupported').style.display = 'block';
+    document.getElementById('btn-record').style.display = 'none';
+  }
+}
+ 
+function updateHeaderDate() {
+  const el = document.getElementById('header-date');
+  if (el) {
+    const now = new Date();
+    el.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+}
+ 
+// ═══════════════════════════════════════
+// AUTH — THREE WORD PASSPHRASE
+// ═══════════════════════════════════════
+function makeKey(w1, w2, w3) {
+  return [w1, w2, w3].map(w => w.trim().toLowerCase()).join('_');
+}
+ 
+function setLoginMode(mode) {
+  document.getElementById('enter-section').style.display = mode === 'enter' ? '' : 'none';
+  document.getElementById('create-section').style.display = mode === 'create' ? '' : 'none';
+  document.getElementById('tab-enter').classList.toggle('active', mode === 'enter');
+  document.getElementById('tab-create').classList.toggle('active', mode === 'create');
+  hideMsg();
+}
+ 
+function showMsg(text, type) {
+  const el = document.getElementById('login-msg');
+  el.textContent = text;
+  el.className = 'login-msg ' + type + ' show';
+}
+ 
+function hideMsg() {
+  document.getElementById('login-msg').className = 'login-msg';
+}
+ 
+function getWords(prefix) {
+  return [
+    document.getElementById(prefix + '-w1').value.trim().toLowerCase(),
+    document.getElementById(prefix + '-w2').value.trim().toLowerCase(),
+    document.getElementById(prefix + '-w3').value.trim().toLowerCase()
+  ];
+}
+ 
+function doCreateAccount() {
+  const [w1, w2, w3] = getWords('create');
+  if (!w1 || !w2 || !w3) { showMsg('⚠️ Please fill in all three words.', 'error'); return; }
+  if (w1 === w2 || w2 === w3 || w1 === w3) { showMsg('⚠️ Please use three different words.', 'error'); return; }
+ 
+  const key = makeKey(w1, w2, w3);
+  const allAccounts = JSON.parse(localStorage.getItem('mj_accounts') || '{}');
+ 
+  if (allAccounts[key]) {
+    showMsg(
+      `⚠️ The words "${w1} · ${w2} · ${w3}" are already taken — but you can use the same words in a different order!`,
+      'warning'
+    );
+    return;
+  }
+ 
+  allAccounts[key] = { created: new Date().toISOString() };
+  localStorage.setItem('mj_accounts', JSON.stringify(allAccounts));
+  localStorage.setItem('mj_entries_' + key, JSON.stringify([]));
+  localStorage.setItem('mj_session', key);
+ 
+  currentUser = key;
+  entries = [];
+  showMsg('✅ Account created!', 'success');
+  setTimeout(showApp, 600);
+}
+ 
+function doSignIn() {
+  const [w1, w2, w3] = getWords('signin');
+  if (!w1 || !w2 || !w3) { showMsg('⚠️ Please enter all three words.', 'error'); return; }
+ 
+  const key = makeKey(w1, w2, w3);
+  const allAccounts = JSON.parse(localStorage.getItem('mj_accounts') || '{}');
+ 
+  if (!allAccounts[key]) {
+    showMsg('❌ Those words didn\'t match any journal. Double-check the order.', 'error');
+    return;
+  }
+ 
+  localStorage.setItem('mj_session', key);
+  currentUser = key;
+  loadEntries();
+  showApp();
+}
+ 
+function doSignOut() {
+  if (!confirm('Sign out of your journal?')) return;
+  localStorage.removeItem('mj_session');
+  currentUser = null;
+  entries = [];
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-login').classList.add('active');
+  // clear inputs
+  ['signin-w1','signin-w2','signin-w3','create-w1','create-w2','create-w3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  hideMsg();
+  setLoginMode('enter');
+}
+ 
+function showApp() {
+  document.getElementById('screen-login').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  updateHeaderDate();
+  renderCalendar();
+  renderEntries();
+}
+ 
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+function loadEntries() {
+  const raw = localStorage.getItem('mj_entries_' + currentUser);
+  entries = raw ? JSON.parse(raw) : [];
+}
+ 
+function saveEntries() {
+  localStorage.setItem('mj_entries_' + currentUser, JSON.stringify(entries));
+}
+ 
+// ═══════════════════════════════════════
+// VOICE
+// ═══════════════════════════════════════
+function toggleRecording() {
+  if (isRecording) stopRecording();
+  else startRecording();
+}
+ 
+function startRecording() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+ 
+  // Don't start if already running
+  if (recognition) { try { recognition.abort(); } catch(e){} recognition = null; }
+ 
+  recognition = new SpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+ 
+  const transcriptEl = document.getElementById('transcript');
+ 
+  // Capture whatever the user has already typed as the committed base
+  let committedText = transcriptEl.innerText.trim();
+  if (committedText) committedText += ' ';
+ 
+  recognition.onstart = () => {
+    isRecording = true;
+    const btn = document.getElementById('btn-record');
+    btn.classList.add('recording');
+    document.getElementById('record-label').textContent = '⏹ Tap to Stop Recording';
+    document.getElementById('voice-indicator').classList.add('active');
+  };
+ 
+  recognition.onresult = (e) => {
+    let interimText = '';
+    let newFinal = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        newFinal += e.results[i][0].transcript;
+      } else {
+        interimText += e.results[i][0].transcript;
+      }
+    }
+    if (newFinal) {
+      committedText += newFinal + ' ';
+    }
+    // Show committed + live interim without blinking/resetting
+    transcriptEl.innerText = committedText + interimText;
+  };
+ 
+  recognition.onerror = (e) => {
+    // 'aborted' fires when we call .stop() ourselves — not a real error
+    if (e.error === 'aborted') return;
+ 
+    let msg = '🎙️ Microphone error — please try again.';
+    if (e.error === 'not-allowed' || e.error === 'permission-denied') {
+      msg = '🚫 Microphone permission denied. Please allow microphone access in your browser settings.';
+    } else if (e.error === 'no-speech') {
+      msg = '🔇 No speech detected. Tap the button and speak clearly.';
+    } else if (e.error === 'network') {
+      msg = '🌐 Network error with speech service. Check your connection.';
+    } else if (e.error === 'audio-capture') {
+      msg = '🎤 No microphone found. Please plug one in and try again.';
+    }
+    showToast(msg);
+    _cleanupRecording();
+  };
+ 
+  recognition.onend = () => {
+    // onend always fires — only call cleanup if we're still marked as recording
+    // (i.e. the engine stopped on its own, not because we called stopRecording)
+    if (isRecording) _cleanupRecording();
+  };
+ 
+  try {
+    recognition.start();
+  } catch(e) {
+    showToast('🎙️ Could not start microphone — please try again.');
+    recognition = null;
+  }
+}
+ 
+function stopRecording() {
+  if (recognition) {
+    try { recognition.stop(); } catch(e){}
+    // onend will fire and call _cleanupRecording
+  } else {
+    _cleanupRecording();
+  }
+}
+ 
+function _cleanupRecording() {
+  isRecording = false;
+  recognition = null;
+  const btn = document.getElementById('btn-record');
+  if (btn) {
+    btn.classList.remove('recording');
+    document.getElementById('record-label').textContent = '🎙️ Tap to Record Your Memory';
+    document.getElementById('voice-indicator').classList.remove('active');
+  }
+}
+ 
+// ═══════════════════════════════════════
+// PHOTOS
+// ═══════════════════════════════════════
+function handlePhotos(event) {
+  const files = Array.from(event.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      pendingPhotos.push(e.target.result);
+      renderPendingPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = '';
+}
+ 
+function renderPendingPhotos() {
+  const container = document.getElementById('photo-previews');
+  container.innerHTML = '';
+  pendingPhotos.forEach((src, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo-thumb';
+    wrap.innerHTML = `<img src="${src}" alt="Photo"><button class="photo-remove" onclick="removePhoto(${i})">✕</button>`;
+    container.appendChild(wrap);
+  });
+}
+ 
+function removePhoto(index) {
+  pendingPhotos.splice(index, 1);
+  renderPendingPhotos();
+}
+ 
+// ═══════════════════════════════════════
+// SAVE ENTRY
+// ═══════════════════════════════════════
+function saveEntry() {
+  // Stop recording first, then read text after a tiny delay so the final
+  // onresult has time to commit before we read innerText
+  if (isRecording) {
+    stopRecording();
+    setTimeout(_doSave, 300);
+    return;
+  }
+  _doSave();
+}
+ 
+function _doSave() {
+  const title = document.getElementById('entry-title').value.trim();
+  const body = document.getElementById('transcript').innerText.trim();
+  const dateVal = document.getElementById('entry-date').value;
+ 
+  if (!title && !body && pendingPhotos.length === 0) {
+    showToast('⚠️ Please add a title, some text, or a photo first.');
+    return;
+  }
+ 
+  let entryDate;
+  if (dateVal) {
+    const [y, m, d] = dateVal.split('-').map(Number);
+    entryDate = new Date(y, m - 1, d, 12, 0, 0);
+  } else {
+    entryDate = new Date();
+  }
+ 
+  const entry = {
+    id: Date.now().toString(),
+    date: entryDate.toISOString(),
+    title: title || 'My Memory',
+    body: body,
+    photos: [...pendingPhotos]
+  };
+ 
+  entries.unshift(entry);
+  saveEntries();
+ 
+  // Reset form
+  document.getElementById('entry-title').value = '';
+  document.getElementById('transcript').innerText = '';
+  pendingPhotos = [];
+  renderPendingPhotos();
+  setDatePickerToToday();
+ 
+  showToast('✅ Memory saved!');
+ 
+  // Navigate to the saved entry's date
+  selectedCalDate = entryDate;
+  calendarDate = new Date(entryDate.getFullYear(), entryDate.getMonth(), 1);
+  renderCalendar();
+  filterEntriesByDate(entryDate);
+  showView('journal');
+}
+ 
+// ═══════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════
+function changeMonth(dir) {
+  calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + dir, 1);
+  renderCalendar();
+}
+ 
+function renderCalendar() {
+  const label = document.getElementById('cal-month-label');
+  const grid = document.getElementById('cal-grid');
+  if (!label || !grid) return;
+ 
+  const year = calendarDate.getFullYear();
+  const month = calendarDate.getMonth();
+ 
+  label.textContent = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+ 
+  grid.innerHTML = '';
+ 
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  dayNames.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'cal-day-name';
+    el.textContent = d;
+    grid.appendChild(el);
+  });
+ 
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+ 
+  // entry dates set
+  const entryDates = new Set(
+    entries.map(e => {
+      const d = new Date(e.date);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    })
+  );
+ 
+  for (let i = 0; i < firstDay; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'cal-day empty';
+    grid.appendChild(blank);
+  }
+ 
+  for (let d = 1; d <= daysInMonth; d++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    el.textContent = d;
+ 
+    const dateKey = `${year}-${month}-${d}`;
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+    const isSelected = selectedCalDate &&
+      selectedCalDate.getFullYear() === year &&
+      selectedCalDate.getMonth() === month &&
+      selectedCalDate.getDate() === d;
+ 
+    if (entryDates.has(dateKey)) el.classList.add('has-entry');
+    if (isToday) el.classList.add('today');
+    if (isSelected) el.classList.add('selected');
+ 
+    el.addEventListener('click', () => {
+      selectedCalDate = new Date(year, month, d);
+      renderCalendar();
+      filterEntriesByDate(selectedCalDate);
+      showView('journal');
+    });
+ 
+    grid.appendChild(el);
+  }
+}
+ 
+function filterEntriesByDate(date) {
+  const label = document.getElementById('entries-section-label');
+  const dateLabel = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  label.textContent = `📅 ${dateLabel}`;
+  document.getElementById('filter-clear-wrap').style.display = 'block';
+ 
+  const filtered = entries.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === date.getFullYear() &&
+      d.getMonth() === date.getMonth() &&
+      d.getDate() === date.getDate();
+  });
+ 
+  renderEntryList(filtered);
+ 
+  // Show a big "add memory for this day" button at the bottom of the list
+  const container = document.getElementById('entries-list');
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d2 = String(date.getDate()).padStart(2, '0');
+  const isoDate = `${y}-${m}-${d2}`;
+ 
+  const addBtn = document.createElement('button');
+  addBtn.id = 'cal-add-btn';
+  addBtn.innerHTML = `<span style="font-size:1.8rem; line-height:1;">＋</span><span>Add a Memory for ${dateLabel}</span>`;
+  addBtn.style.cssText = `
+    width:100%; padding:22px 20px; margin-top:8px;
+    background:var(--accent-soft); border:2px dashed var(--accent);
+    border-radius:var(--radius); color:var(--accent2);
+    font-family:'Nunito',sans-serif; font-size:1.1rem; font-weight:800;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    gap:14px; transition:all 0.2s;
+  `;
+  addBtn.onmouseenter = () => { addBtn.style.background = 'rgba(240,165,0,0.25)'; };
+  addBtn.onmouseleave = () => { addBtn.style.background = 'var(--accent-soft)'; };
+  addBtn.onclick = () => newMemoryForDate(isoDate);
+  container.appendChild(addBtn);
+}
+ 
+// ═══════════════════════════════════════
+// ENTRIES
+// ═══════════════════════════════════════
+function renderEntries() {
+  selectedCalDate = null;
+  document.getElementById('entries-section-label').textContent = '📚 All Memories';
+  document.getElementById('filter-clear-wrap').style.display = 'none';
+  renderEntryList(entries);
+}
+ 
+function clearDateFilter() {
+  selectedCalDate = null;
+  renderCalendar();
+  renderEntries();
+}
+ 
+function newMemoryForDate(isoDate) {
+  _pendingNewDate = isoDate;
+  showView('new');
+}
+ 
+function renderEntryList(list) {
+  const container = document.getElementById('entries-list');
+  const countEl = document.getElementById('entries-count');
+ 
+  countEl.textContent = list.length > 0 ? `${list.length} entr${list.length === 1 ? 'y' : 'ies'}` : '';
+ 
+  container.innerHTML = '';
+ 
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="no-entries">
+        <div class="no-entries-icon">🌿</div>
+        <div class="no-entries-text">No memories here yet.<br>Tap <strong>＋ Add a Memory</strong> below or use the <strong>New Memory</strong> tab!</div>
+      </div>`;
+    // Don't return — let the caller (filterEntriesByDate) append the add button after
+    return;
+  }
+ 
+  list.forEach(entry => {
+    const d = new Date(entry.date);
+    const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+ 
+    const card = document.createElement('div');
+    card.className = 'entry-card';
+    card.dataset.id = entry.id;
+ 
+    let photosHtml = '';
+    if (entry.photos && entry.photos.length > 0) {
+      const thumbs = entry.photos.slice(0, 3).map(p =>
+        `<img class="entry-thumb" src="${p}" alt="Photo">`
+      ).join('');
+      photosHtml = `<div class="entry-card-photos">${thumbs}</div>`;
+    }
+ 
+    card.innerHTML = `
+      <button class="entry-delete" onclick="deleteEntry(event,'${entry.id}')">🗑</button>
+      <div class="entry-card-date">${dateStr}</div>
+      <div class="entry-card-title">${escHtml(entry.title)}</div>
+      ${entry.body ? `<div class="entry-card-preview">${escHtml(entry.body)}</div>` : ''}
+      ${photosHtml}
+    `;
+ 
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.entry-delete')) return;
+      openEntry(entry);
+    });
+ 
+    container.appendChild(card);
+  });
+}
+ 
+function deleteEntry(e, id) {
+  e.stopPropagation();
+  if (!confirm('Delete this memory? This cannot be undone.')) return;
+  entries = entries.filter(en => en.id !== id);
+  saveEntries();
+  renderCalendar();
+  if (selectedCalDate) {
+    filterEntriesByDate(selectedCalDate);
+  } else {
+    renderEntries();
+  }
+  showToast('Memory deleted.');
+}
+ 
+function openEntry(entry) {
+  const d = new Date(entry.date);
+  document.getElementById('modal-date').textContent =
+    d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  document.getElementById('modal-title').textContent = entry.title;
+  document.getElementById('modal-body').textContent = entry.body || '';
+ 
+  const photosEl = document.getElementById('modal-photos');
+  photosEl.innerHTML = '';
+  if (entry.photos && entry.photos.length > 0) {
+    entry.photos.forEach(src => {
+      const img = document.createElement('img');
+      img.className = 'modal-photo';
+      img.src = src;
+      img.alt = 'Memory photo';
+      img.onclick = () => openLightbox(src);
+      photosEl.appendChild(img);
+    });
+  }
+ 
+  document.getElementById('entry-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+ 
+function closeModal(e) {
+  if (e.target === document.getElementById('entry-modal')) closeModalDirect();
+}
+ 
+function closeModalDirect() {
+  document.getElementById('entry-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+ 
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+ 
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-img').src = '';
+}
+ 
+// ═══════════════════════════════════════
+// NAV
+// ═══════════════════════════════════════
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+ 
+  if (name === 'new') {
+    // Only reset to today if there's no pending date to pre-fill
+    if (_pendingNewDate) {
+      const el = document.getElementById('entry-date');
+      if (el) el.value = _pendingNewDate;
+      _pendingNewDate = null;
+    } else {
+      setDatePickerToToday();
+    }
+  }
+ 
+  if (name === 'journal') {
+    if (selectedCalDate) {
+      filterEntriesByDate(selectedCalDate);
+    } else {
+      renderEntries();
+    }
+  }
+ 
+  window.scrollTo(0, 0);
+}
+ 
+// ═══════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+ 
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+ 
+// Enter key on word inputs → next / submit
+document.querySelectorAll('.word-input').forEach((input, i, all) => {
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (i < all.length - 1) all[i + 1].focus();
+      else {
+        // find which section is visible and submit
+        if (document.getElementById('enter-section').style.display !== 'none') doSignIn();
+        else doCreateAccount();
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>
+ 
